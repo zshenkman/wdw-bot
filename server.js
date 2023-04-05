@@ -92,7 +92,6 @@ async function runAvailabilityChecker() {
         }
     } catch (err) {
         console.log(`ERROR: ${err.message}`)
-        Sentry.captureException(err)
     }
 }
 
@@ -102,29 +101,35 @@ async function checkParkAvailability(parkCode, startDate, endDate) {
         try {
             const formattedStartDate = dayjs(startDate).format('YYYY-MM-DD')
             const formattedEndDate = dayjs(endDate).format('YYYY-MM-DD')
-            const res = await axios.get(`${WDW_CALENDAR_API_URL}/calendar?segment=tickets&startDate=${formattedStartDate}&endDate=${formattedEndDate}`).catch((err) => reject(err))
-
-            if (!res || !res.data) {
-                console.log(res)
-                reject(new Error(`Invalid response received from WDW API.`))
-            }
-
-            if (res.status !== 200) {
-                reject(new Error(`Error ${res.status} encountered while querying WDW API.`))
-            }
-            
-            // Checks response for available park reservations
-            const parkIsAvailable = false
-            for (const reservationWindow of res.data) {
-                const { availability, parks } = reservationWindow
-                if (availability == 'full' || parks.includes(parkCode)) {
-                    parkIsAvailable = true
-                    break
+            axios.get(`${WDW_CALENDAR_API_URL}/calendar?segment=tickets&startDate=${formattedStartDate}&endDate=${formattedEndDate}`)
+            .then((res) => {
+                if (!res || !res.data) {
+                    console.log(res)
+                    reject(new Error(`Invalid response received from WDW API.`))
                 }
-            }
-
-            resolve(parkIsAvailable)
+    
+                if (res.status !== 200) {
+                    reject(new Error(`Error ${res.status} encountered while querying WDW API.`))
+                }
+                
+                // Checks response for available park reservations
+                const parkIsAvailable = false
+                for (const reservationWindow of res.data) {
+                    const { availability, parks } = reservationWindow
+                    if (availability == 'full' || parks.includes(parkCode)) {
+                        parkIsAvailable = true
+                        break
+                    }
+                }
+    
+                resolve(parkIsAvailable)
+            })
+            .catch((err) => {
+                Sentry.captureException(err)
+                reject(err)
+            })
         } catch (err) {
+            Sentry.captureException(err)
             reject(err)
         }
     })
@@ -138,7 +143,10 @@ async function sendSMSMessage(phoneNumber, message) {
                 from: TWILIO_PHONE_NUMBER,
                 to: PHONE_NUMBER,
                 body: message
-            }).catch((err) => reject(err))
+            }).catch((err) => {
+                Sentry.captureException(err)
+                reject(err)
+            })
 
             console.log(`SMS message ${res.sid} sent to ${phoneNumber}`)
             resolve()
