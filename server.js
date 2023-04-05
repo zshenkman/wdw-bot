@@ -97,7 +97,14 @@ async function checkParkAvailability(parkCode, startDate, endDate) {
         try {
             const formattedStartDate = dayjs(startDate).format('YYYY-MM-DD')
             const formattedEndDate = dayjs(endDate).format('YYYY-MM-DD')
-            axios.get(`${WDW_CALENDAR_API_URL}/calendar?segment=tickets&startDate=${formattedStartDate}&endDate=${formattedEndDate}`)
+
+            const reqConfig = {
+                headers: {
+                    'Access-Control-Allow-Origin': '*'
+                }
+            }
+
+            axios.get(`${WDW_CALENDAR_API_URL}/calendar?segment=tickets&startDate=${formattedStartDate}&endDate=${formattedEndDate}`, reqConfig)
             .then((res) => {
                 if (!res || !res.data) {
                     console.log(res)
