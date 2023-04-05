@@ -1,5 +1,6 @@
 const express = require('express')
 const cors = require('cors')
+const https = require('https')
 const axios = require('axios').default
 const dayjs = require('dayjs')
 const dotenv = require('dotenv')
@@ -27,7 +28,6 @@ const PARK_NAMES = {
 
 // Configures Express app
 const PORT = process.env.PORT || 8000
-
 const app = express()
 app.use(cors())
 
@@ -63,9 +63,16 @@ async function checkParkAvailability(parkCode, startDate, endDate) {
         try {
             const formattedStartDate = dayjs(startDate).format('YYYY-MM-DD')
             const formattedEndDate = dayjs(endDate).format('YYYY-MM-DD')
-            const res = await axios(`${WDW_CALENDAR_API_URL}/calendar?segment=tickets&startDate=${formattedStartDate}&endDate=${formattedEndDate}`).catch((err) => reject(err))
+            const res = await axios({
+                url: `${WDW_CALENDAR_API_URL}/calendar?segment=tickets&startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
+                method: 'GET',
+                headers: {
+                    'Access-Control-Allow-Origin': '*'
+                }
+            }).catch((err) => reject(err))
 
             if (!res || !res.data) {
+                console.log(res)
                 reject(new Error(`Invalid response received from WDW API.`))
             }
 
