@@ -56,13 +56,13 @@ app.use(Sentry.Handlers.requestHandler())
 // TracingHandler creates a trace for every incoming request
 app.use(Sentry.Handlers.tracingHandler())
 
-// The error handler must be before any other error middleware and after all controllers
-app.use(Sentry.Handlers.errorHandler());
-
 // Configures Express middleware
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cors())
+
+// The error handler must be before any other error middleware and after all controllers
+app.use(Sentry.Handlers.errorHandler())
 
 axios.defaults.headers.common['Accept-Encoding'] = '*'
 
@@ -125,10 +125,12 @@ async function checkParkAvailability(parkCode, startDate, endDate) {
                 resolve(parkIsAvailable)
             })
             .catch((err) => {
+                console.log(err)
                 Sentry.captureException(err)
                 reject(err)
             })
         } catch (err) {
+            console.log(err)
             Sentry.captureException(err)
             reject(err)
         }
