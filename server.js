@@ -3,7 +3,7 @@ const cors = require('cors')
 const Sentry = require('@sentry/node')
 const Tracing = require('@sentry/tracing')
 const https = require('https')
-const axios = require('axios').default
+const axios = require('axios')
 const dayjs = require('dayjs')
 const dotenv = require('dotenv')
 dotenv.config()
@@ -87,6 +87,7 @@ async function runAvailabilityChecker() {
         }
     } catch (err) {
         console.log(`ERROR: ${err.message}`)
+        Sentry.captureException(err)
     }
 }
 
@@ -96,13 +97,7 @@ async function checkParkAvailability(parkCode, startDate, endDate) {
         try {
             const formattedStartDate = dayjs(startDate).format('YYYY-MM-DD')
             const formattedEndDate = dayjs(endDate).format('YYYY-MM-DD')
-            const res = await axios({
-                url: `${WDW_CALENDAR_API_URL}/calendar?segment=tickets&startDate=${formattedStartDate}&endDate=${formattedEndDate}`,
-                method: 'GET',
-                headers: {
-                    'Access-Control-Allow-Origin': '*'
-                }
-            }).catch((err) => reject(err))
+            const res = await axios.get(`${WDW_CALENDAR_API_URL}/calendar?segment=tickets&startDate=${formattedStartDate}&endDate=${formattedEndDate}`).catch((err) => reject(err))
 
             if (!res || !res.data) {
                 console.log(res)
