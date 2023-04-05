@@ -48,9 +48,12 @@ app.listen(PORT, () => {
 async function runAvailabilityChecker() {
     try {
         const parkIsAvailable = await checkParkAvailability(PARK_CODE, START_DATE, END_DATE)
+        const parkName = PARK_NAMES[PARK_CODE]
         if (parkIsAvailable) {
-            const parkName = PARK_NAMES[PARK_CODE]
+            console.log(`Availability found at ${parkName}!`)
             await sendSMSMessage(PHONE_NUMBER, `🚨 There is an open park reservation at ${parkName} now!`)
+        } else {
+            console.log(`No availability found at ${parkName}.`)
         }
     } catch (err) {
         console.log(`ERROR: ${err.message}`)
