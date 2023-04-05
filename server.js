@@ -31,9 +31,6 @@ const PARK_NAMES = {
 // Configures Express app
 const PORT = process.env.PORT || 8000
 const app = express()
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
-app.use(cors())
 
 // Configures Sentry
 const SENTRY_DSN = process.env.SENTRY_DSN
@@ -58,6 +55,14 @@ Sentry.init({
 app.use(Sentry.Handlers.requestHandler())
 // TracingHandler creates a trace for every incoming request
 app.use(Sentry.Handlers.tracingHandler())
+
+// The error handler must be before any other error middleware and after all controllers
+app.use(Sentry.Handlers.errorHandler());
+
+// Configures Express middleware
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+app.use(cors())
 
 axios.defaults.headers.common['Accept-Encoding'] = '*'
 
