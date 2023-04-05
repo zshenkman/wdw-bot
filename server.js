@@ -57,14 +57,10 @@ app.use(Sentry.Handlers.requestHandler())
 app.use(Sentry.Handlers.tracingHandler())
 
 // Configures Express middleware
-app.use(express.json())
-app.use(express.urlencoded({ extended: true }))
 app.use(cors())
 
 // The error handler must be before any other error middleware and after all controllers
 app.use(Sentry.Handlers.errorHandler())
-
-axios.defaults.headers.common['Accept-Encoding'] = '*'
 
 // Starts the express server
 app.listen(PORT, () => {
