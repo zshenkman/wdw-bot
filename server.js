@@ -39,7 +39,7 @@ app.listen(PORT, () => {
     const formattedStartDate = dayjs(START_DATE).format('dddd, MMMM D')
     sendSMSMessage(PHONE_NUMBER, `Hi, I'm Bot Iger! I'll send you an alert when a park reservation opens for ${parkName} on ${formattedStartDate}.`)
     // Check for availability every 60 seconds
-    setTimeout(() => {
+    setInterval(() => {
         runAvailabilityChecker()
     }, 1000 * 60)
 })
