@@ -1,12 +1,9 @@
 const express = require('express')
+const cors = require('cors')
 const axios = require('axios').default
 const dayjs = require('dayjs')
 const dotenv = require('dotenv')
 dotenv.config()
-
-// Express app configuration
-const app = express()
-const PORT = process.env.PORT || 8000
 
 // Twilio SMS configuration
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID
@@ -27,6 +24,12 @@ const PARK_NAMES = {
     80007823: 'Epcot',
     80007838: 'Animal Kingdom'
 }
+
+// Configures Express app
+const PORT = process.env.PORT || 8000
+
+const app = express()
+app.use(cors())
 
 // Starts the express server
 app.listen(PORT, () => {
