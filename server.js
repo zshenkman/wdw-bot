@@ -36,9 +36,9 @@ app.listen(PORT, () => {
     const formattedStartDate = dayjs(START_DATE).format('dddd, MMMM D')
     sendSMSMessage(PHONE_NUMBER, `Hi, I'm Bot Iger! I'll send you an alert when a park reservation opens for ${parkName} on ${formattedStartDate}.`)
     // Check for availability every 60 seconds
-    // setTimeout(() => {
+    setTimeout(() => {
         runAvailabilityChecker()
-    // }, 1000 * 60)
+    }, 1000 * 60)
 })
 
 // Sends an alert upon park availability
@@ -57,39 +57,50 @@ async function runAvailabilityChecker() {
 // Queries WDW API in date range and checks for park availability
 async function checkParkAvailability(parkCode, startDate, endDate) {
     return new Promise(async (resolve, reject) => {
-        const formattedStartDate = dayjs(startDate).format('YYYY-MM-DD')
-        const formattedEndDate = dayjs(endDate).format('YYYY-MM-DD')
-        const res = await axios(`${WDW_CALENDAR_API_URL}/calendar?segment=tickets&startDate=${formattedStartDate}&endDate=${formattedEndDate}`).catch((err) => reject(err))
+        try {
+            const formattedStartDate = dayjs(startDate).format('YYYY-MM-DD')
+            const formattedEndDate = dayjs(endDate).format('YYYY-MM-DD')
+            const res = await axios(`${WDW_CALENDAR_API_URL}/calendar?segment=tickets&startDate=${formattedStartDate}&endDate=${formattedEndDate}`).catch((err) => reject(err))
 
-        if (!res || !res.data) {
-            console.log(res.status)
-            reject(new Error(`Error ${res.status} encountered while querying Disney API.`))
-        }
-        
-        // Checks response for available park reservations
-        const parkIsAvailable = false
-        for (const reservationWindow of res.data) {
-            const { availability, parks } = reservationWindow
-            if (availability == 'full' || parks.includes(parkCode)) {
-                parkIsAvailable = true
-                break
+            if (!res || !res.data) {
+                reject(new Error(`Invalid response received from WDW API.`))
             }
-        }
 
-        resolve(parkIsAvailable)
+            if (res.status !== 200) {
+                reject(new Error(`Error ${res.status} encountered while querying WDW API.`))
+            }
+            
+            // Checks response for available park reservations
+            const parkIsAvailable = false
+            for (const reservationWindow of res.data) {
+                const { availability, parks } = reservationWindow
+                if (availability == 'full' || parks.includes(parkCode)) {
+                    parkIsAvailable = true
+                    break
+                }
+            }
+
+            resolve(parkIsAvailable)
+        } catch (err) {
+            reject(err)
+        }
     })
 }
 
 // Sends SMS message via Twilio
 async function sendSMSMessage(phoneNumber, message) {
     return new Promise(async (resolve, reject) => {
-        const res = await twilioClient.messages.create({
-            from: TWILIO_PHONE_NUMBER,
-            to: PHONE_NUMBER,
-            body: message
-        }).catch((err) => reject(err))
+        try {
+            const res = await twilioClient.messages.create({
+                from: TWILIO_PHONE_NUMBER,
+                to: PHONE_NUMBER,
+                body: message
+            }).catch((err) => reject(err))
 
-        console.log(`SMS message ${res.sid} sent to ${phoneNumber}`)
-        resolve()
+            console.log(`SMS message ${res.sid} sent to ${phoneNumber}`)
+            resolve()
+        } catch (err) {
+            reject(err)
+        }
     })
 }
